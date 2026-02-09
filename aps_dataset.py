@@ -11,8 +11,9 @@ class APSSiameseDataset(Dataset):
         self.features = features
         self.aps_vectors = aps_vectors
 
-        self.data = []
+        self.data = []                                  # Will contain a list of tuples as data
 
+        # The following allows every combination of the dataset vectors to be created for the dataset
         for idx1, f_vec1 in enumerate(self.features):
             for idx2, f_vec2 in enumerate(self.features):
                 similarity = F.pairwise_distance(self.aps_vectors[idx1], self.aps_vectors[idx2], p= 2)
@@ -132,6 +133,7 @@ def validate(val_dataloader, model, device):
                 results.append((round(similarity.item(), 6), round(distance.item(), 6)))
 
     
+    # Block below prints out the APSvector Similarity and Embedded Vector similarity 
     print("Validation Results : \nAPS \t\t Embedding")
     APSData, EmbeddingData = [] , []
     for i in results:
@@ -140,5 +142,3 @@ def validate(val_dataloader, model, device):
         print(i[0], "\t", i[1])
     
     multi_plot(APSData, EmbeddingData)
-    # heatmap(APSData, 'APSSim Heatmap')
-    # heatmap(EmbeddingData, 'Embedding Heatmap')

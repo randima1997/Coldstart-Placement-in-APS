@@ -129,22 +129,27 @@ GROUP BY
 """
 
 
-complete_datasets_df = pd.read_sql(query_complete_d, engine)
-aps_df = pd.read_sql(query_aps_ndcg10, engine).set_index("dataset", drop= False)
-features_df = pd.read_sql(query_features, engine).set_index("dataset", drop= False)
+complete_datasets_df = pd.read_sql(query_complete_d, engine)            # Gets a dataframe containing all datasets with complete APS vectors
+aps_df = pd.read_sql(query_aps_ndcg10,                                  # Returns dataframe of ndcg with algorithms as columns and datasets as rows
+                     engine).set_index("dataset", drop= False)          # Changes row indices to column 'dataset'
+features_df = pd.read_sql(query_features,                               # Returns dataframe of dataset meta features
+                          engine).set_index("dataset", drop= False)
 
 
-mask = complete_datasets_df['dataset'].to_list()
+mask = complete_datasets_df['dataset'].to_list()                        # This will be used to index all the complete vector datasets
 
 
-aps_vectors = aps_df.loc[mask].reset_index(drop= True)
+aps_vectors = aps_df.loc[mask].reset_index(drop= True)                  # Extracts requisite values and resets index back to numbers
 feature_vectors = features_df.loc[mask].reset_index(drop= True)
 
+# Slice the dataframes accordingly and turn into torch tensors
 tempaps_df = aps_vectors.iloc[:, 1:]
 temp_df = feature_vectors.iloc[:, 1:]
 t_aps = torch.tensor(tempaps_df.values, dtype=torch.float32)
 t_f = torch.tensor(temp_df.values, dtype=torch.float32)
 
+
+# Set up dataset and subsets for training and validation
 dataset = APSSiameseDataset(t_f, t_aps)
 
 train_set_size = int(0.95*len(dataset))
@@ -180,6 +185,8 @@ print(f"Using {device} device")
 
 
 
+# Model declaration
+
 epochs = 15
 
 model = SiameseNet(EmbeddingNet()).to(device)
@@ -194,7 +201,7 @@ for t in range(epochs):
     print(f"Running Epoch{t}")
     train(train_dataloader, model, device, loss_func, optimizer, loss_data)
 
-plot_loss(loss_data)
+plot_loss(loss_data)                                                    # Plots the variation of loss over time
 
 validate(val_dataloader, model, device)
 
